@@ -5,7 +5,7 @@ class StageModel {
   final String name;
   final int height;
   final int width;
-  final List<List<int>> roomGrid;
+  final List<List<bool>> roomGrid;
 
   StageModel({
     required this.id,

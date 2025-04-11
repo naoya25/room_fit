@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:room_fit/models/furniture_model.dart';
 
 class CustomGridDisplay extends StatelessWidget {
   const CustomGridDisplay({
@@ -7,15 +8,19 @@ class CustomGridDisplay extends StatelessWidget {
     required this.width,
     required this.height,
     this.cellSize = 10,
+    this.onCellTap,
+    this.placedFurnitures,
   });
 
-  final List<List<int>> grid;
+  final List<List<bool>> grid;
   final int width;
   final int height;
   final int cellSize;
+  final Function(int x, int y)? onCellTap;
+  final List<PlacedFurniture>? placedFurnitures;
 
   Border? _getBorder(int x, int y) {
-    if (grid[y][x] == 0) return null;
+    if (!grid[y][x]) return null;
 
     final directions = [
       [0, -1],
@@ -38,7 +43,7 @@ class CustomGridDisplay extends StatelessWidget {
           newX >= width ||
           newY < 0 ||
           newY >= height ||
-          grid[newY][newX] == 0;
+          !grid[newY][newX];
 
       if (isBoundary) {
         if (dir[0] == 0 && dir[1] == -1) {
@@ -86,12 +91,15 @@ class CustomGridDisplay extends StatelessWidget {
             final y = index ~/ width;
             final cellValue = grid[y][x];
 
-            return Container(
-              width: cellSize.toDouble(),
-              height: cellSize.toDouble(),
-              decoration: BoxDecoration(
-                color: cellValue == 1 ? Colors.white : Colors.transparent,
-                border: _getBorder(x, y),
+            return GestureDetector(
+              onTap: () => onCellTap?.call(x, y),
+              child: Container(
+                width: cellSize.toDouble(),
+                height: cellSize.toDouble(),
+                decoration: BoxDecoration(
+                  color: cellValue ? Colors.white : Colors.transparent,
+                  border: _getBorder(x, y),
+                ),
               ),
             );
           },

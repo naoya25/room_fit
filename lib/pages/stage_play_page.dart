@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:room_fit/components/grid_display.dart';
 import 'package:room_fit/models/furniture_model.dart';
-import 'package:room_fit/providers/furniture_provider.dart';
+import 'package:room_fit/providers/furniture/continuous_furniture_provider.dart';
 import '../providers/stage_provider.dart';
 
 class StagePlayPage extends HookConsumerWidget {
@@ -11,14 +12,22 @@ class StagePlayPage extends HookConsumerWidget {
   const StagePlayPage({super.key, required this.stageId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(context, ref) {
     final stageAsync = ref.watch(stageDetailProvider(stageId));
-    final furnitureQueue = ref.watch(randomFurnitureQueueProvider);
+    final furnitureQueue = ref.watch(continuousFurnitureQueueProvider);
+    final currentFurniture =
+        furnitureQueue?.isNotEmpty == true ? furnitureQueue!.first : null;
 
-    FurnitureModel? currentFurniture =
-        furnitureQueue.value?.isNotEmpty ?? false
-            ? furnitureQueue.value?.first
-            : null;
+    final placedFurnitures = useState<List<PlacedFurniture>>([]);
+
+    void placeFurnitureAt(int x, int y) {
+      if (currentFurniture == null) return;
+      placedFurnitures.value = [
+        ...placedFurnitures.value,
+        PlacedFurniture(furniture: currentFurniture, x: x, y: y, rotation: 0),
+      ];
+      ref.read(continuousFurnitureQueueProvider.notifier).removeFirst();
+    }
 
     return Scaffold(
       appBar: AppBar(title: Text("ステージプレイ")),
@@ -34,6 +43,8 @@ class StagePlayPage extends HookConsumerWidget {
                 width: stage.width,
                 height: stage.height,
                 cellSize: cellSize,
+                onCellTap: placeFurnitureAt,
+                placedFurnitures: placedFurnitures.value,
               ),
               if (currentFurniture != null) ...[
                 Text("次の家具: ${currentFurniture.name}"),

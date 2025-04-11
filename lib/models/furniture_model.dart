@@ -5,7 +5,7 @@ class FurnitureModel {
   final String name;
   final int height;
   final int width;
-  final List<List<int>> grid;
+  final List<List<bool>> grid;
 
   FurnitureModel({
     required this.id,
@@ -24,4 +24,18 @@ class FurnitureModel {
       grid: decodeGrid(json['grid'], json['height'], json['width']),
     );
   }
+}
+
+class PlacedFurniture {
+  final FurnitureModel furniture;
+  final int x;
+  final int y;
+  final int rotation;
+
+  PlacedFurniture({
+    required this.furniture,
+    required this.x,
+    required this.y,
+    this.rotation = 0,
+  });
 }
