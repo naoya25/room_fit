@@ -1,20 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:room_fit/providers/router_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:room_fit/env/env.dart';
 
-void main() {
-  runApp(const MainApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  FlutterError.onError = (FlutterErrorDetails details) {
+    debugPrint(details.toString());
+  };
+  await Supabase.initialize(url: Env.supabaseUrl, anonKey: Env.supabaseAnonKey);
+  runApp(ProviderScope(child: MainApp()));
 }
 
-class MainApp extends StatelessWidget {
+class MainApp extends ConsumerWidget {
   const MainApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(routerProvider);
+
+    return MaterialApp.router(
+      title: 'RoomFit',
+      routerDelegate: router.routerDelegate,
+      routeInformationParser: router.routeInformationParser,
+      routeInformationProvider: router.routeInformationProvider,
     );
   }
 }
