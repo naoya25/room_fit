@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../providers/auth_provider.dart';
 
@@ -17,7 +18,17 @@ class HomePage extends HookConsumerWidget {
           ),
         ],
       ),
-      body: Center(child: Text('Welcome to RoomFit!')),
+      body: Center(
+        child: Column(
+          children: [
+            Text('Welcome to RoomFit!'),
+            TextButton(
+              onPressed: () => context.push('/select'),
+              child: const Text('ステージを選ぶ'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

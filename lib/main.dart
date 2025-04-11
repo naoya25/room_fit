@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:room_fit/providers/router_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:room_fit/env/env.dart';
+import 'package:room_fit/core/theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +23,7 @@ class MainApp extends ConsumerWidget {
 
     return MaterialApp.router(
       title: 'RoomFit',
+      theme: AppTheme.lightTheme,
       routerDelegate: router.routerDelegate,
       routeInformationParser: router.routeInformationParser,
       routeInformationProvider: router.routeInformationProvider,

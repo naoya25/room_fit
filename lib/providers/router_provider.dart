@@ -1,5 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:room_fit/pages/stage_play_page.dart';
+import 'package:room_fit/pages/stage_select_page.dart';
 import '../pages/login_page.dart';
 import '../pages/home_page.dart';
 import '../providers/auth_provider.dart';
@@ -24,8 +26,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
-      GoRoute(path: '/', builder: (context, state) => const HomePage()),
+      GoRoute(path: '/', builder: (_, __) => const HomePage()),
+      GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
+      GoRoute(path: '/select', builder: (_, __) => const StageSelectPage()),
+      GoRoute(
+        path: '/play/:stageId',
+        builder:
+            (_, state) =>
+                StagePlayPage(stageId: state.pathParameters['stageId']!),
+      ),
     ],
   );
 });
