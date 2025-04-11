@@ -19,14 +19,16 @@ class CustomGridDisplay extends StatelessWidget {
   final Function(int x, int y)? onCellTap;
   final List<PlacedFurniture>? placedFurnitures;
 
-  bool _isFurnitureInBounds(PlacedFurniture furniture) {
-    return furniture.x >= 0 &&
-        furniture.y >= 0 &&
-        furniture.x + furniture.furniture.width <= width &&
-        furniture.y + furniture.furniture.height <= height;
-  }
+  bool _validPlacement(PlacedFurniture furniture) {
+    // グリッドの範囲チェック
+    if (furniture.x < 0 ||
+        furniture.y < 0 ||
+        furniture.x + furniture.furniture.width > width ||
+        furniture.y + furniture.furniture.height > height) {
+      return false;
+    }
 
-  bool _isFurnitureOverlapping(PlacedFurniture furniture) {
+    // 配置可能なセルかチェック
     for (
       var y = furniture.y;
       y < furniture.y + furniture.furniture.height;
@@ -38,11 +40,26 @@ class CustomGridDisplay extends StatelessWidget {
         x++
       ) {
         if (!grid[y][x]) {
-          return true;
+          return false;
         }
       }
     }
-    return false;
+
+    // 他の家具との重なりチェック
+    if (placedFurnitures != null) {
+      for (var otherFurniture in placedFurnitures!) {
+        if (furniture == otherFurniture) continue;
+
+        if (furniture.x < otherFurniture.x + otherFurniture.furniture.width &&
+            furniture.x + furniture.furniture.width > otherFurniture.x &&
+            furniture.y < otherFurniture.y + otherFurniture.furniture.height &&
+            furniture.y + furniture.furniture.height > otherFurniture.y) {
+          return false;
+        }
+      }
+    }
+
+    return true;
   }
 
   Border? _getBorder(int x, int y) {
@@ -103,20 +120,9 @@ class CustomGridDisplay extends StatelessWidget {
   Widget build(BuildContext context) {
     if (placedFurnitures != null) {
       for (var furniture in placedFurnitures!) {
-        if (!_isFurnitureInBounds(furniture)) {
+        if (!_validPlacement(furniture)) {
           return Center(
-            child: Text(
-              '家具が部屋の範囲外に配置されています',
-              style: TextStyle(color: Colors.red),
-            ),
-          );
-        }
-        if (_isFurnitureOverlapping(furniture)) {
-          return Center(
-            child: Text(
-              '家具が壁や他の家具と重なっています',
-              style: TextStyle(color: Colors.red),
-            ),
+            child: Text('家具が配置できません', style: TextStyle(color: Colors.red)),
           );
         }
       }
