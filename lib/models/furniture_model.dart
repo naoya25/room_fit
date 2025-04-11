@@ -1,27 +1,27 @@
 import 'package:room_fit/core/utils/grid.dart';
 
-class StageModel {
+class FurnitureModel {
   final String id;
   final String name;
   final int height;
   final int width;
-  final List<List<int>> roomGrid;
+  final List<List<int>> grid;
 
-  StageModel({
+  FurnitureModel({
     required this.id,
     required this.name,
     required this.height,
     required this.width,
-    required this.roomGrid,
+    required this.grid,
   });
 
-  factory StageModel.fromJson(Map<String, dynamic> json) {
-    return StageModel(
+  factory FurnitureModel.fromJson(Map<String, dynamic> json) {
+    return FurnitureModel(
       id: json['id'],
       name: json['name'],
       height: json['height'],
       width: json['width'],
-      roomGrid: decodeGrid(json['room_grid'], json['height'], json['width']),
+      grid: decodeGrid(json['grid'], json['height'], json['width']),
     );
   }
 }
