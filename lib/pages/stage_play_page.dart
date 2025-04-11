@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:room_fit/components/error.dart';
-import '../components/grid_display.dart';
+import '../components/grid/custom_grid_display.dart';
 import '../models/furniture_model.dart';
 import '../providers/furniture/continuous_furniture_provider.dart';
 import '../providers/stage_provider.dart';
@@ -81,8 +81,8 @@ class StagePlayPage extends HookConsumerWidget {
             children: [
               CustomGridDisplay(
                 grid: stage.roomGrid,
-                width: stage.width,
-                height: stage.height,
+                colNum: stage.width,
+                rowNum: stage.height,
                 cellSize: cellSize,
                 onCellTap: placeFurnitureAt,
                 placedFurnitures: placedFurnitures.value,
@@ -91,8 +91,8 @@ class StagePlayPage extends HookConsumerWidget {
                 Text("次の家具: ${currentFurniture.name}"),
                 CustomGridDisplay(
                   grid: currentFurniture.grid,
-                  width: currentFurniture.width,
-                  height: currentFurniture.height,
+                  colNum: currentFurniture.width,
+                  rowNum: currentFurniture.height,
                   cellSize: cellSize,
                 ),
               ],
