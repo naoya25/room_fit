@@ -1,38 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:room_fit/pages/stage_creation/components/mode_toggle_button.dart';
-import 'package:room_fit/pages/stage_creation/components/selection_painter.dart';
 import 'package:room_fit/pages/stage_creation/stage_creation_page.dart';
 
 /// 部屋のグリッド編集UI
 class RoomGridInput extends HookWidget {
   const RoomGridInput({
     super.key,
-    required this.width,
-    required this.height,
-    required this.calculatedHeight,
+    required this.columnCount,
+    required this.rowCount,
+    required this.cellSize,
     required this.roomGrid,
   });
 
-  final int width;
-  final int height;
-  final double calculatedHeight;
+  final int columnCount;
+  final int rowCount;
+  final int cellSize;
   final ValueNotifier<List<List<bool>>> roomGrid;
 
   @override
   Widget build(BuildContext context) {
     final isDragging = useState(false);
     final mode = useState(GridMode.add);
-    final startPosition = useState<Offset?>(null);
-    final currentPosition = useState<Offset?>(null);
+    final startX = useState<int?>(null);
+    final startY = useState<int?>(null);
+    final currentX = useState<int?>(null);
+    final currentY = useState<int?>(null);
 
-    void updateGridInRange(Offset start, Offset end) {
-      final cellSize = calculatedHeight / height;
-      final startX = (start.dx / cellSize).floor().clamp(0, width - 1);
-      final startY = (start.dy / cellSize).floor().clamp(0, height - 1);
-      final endX = (end.dx / cellSize).floor().clamp(0, width - 1);
-      final endY = (end.dy / cellSize).floor().clamp(0, height - 1);
-
+    void updateGridInRange(int startX, int startY, int endX, int endY) {
       final minX = startX < endX ? startX : endX;
       final maxX = startX < endX ? endX : startX;
       final minY = startY < endY ? startY : endY;
@@ -56,54 +51,65 @@ class RoomGridInput extends HookWidget {
         ModeToggleButton(currentMode: mode),
         const SizedBox(height: 16),
         Text('部屋の配置をタップまたはドラッグして設定してください'),
-        Text('横幅: $width  高さ: $height'),
+        Text('横幅: $columnCount  高さ: $rowCount'),
         const SizedBox(height: 16),
         Container(
           width: double.infinity,
-          height: calculatedHeight,
+          height: cellSize * rowCount.toDouble(),
           decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
           child: GestureDetector(
             onPanStart: (details) {
               isDragging.value = true;
-              final cellSize = calculatedHeight / height;
-              final startX = (details.localPosition.dx / cellSize).floor();
-              final startY = (details.localPosition.dy / cellSize).floor();
-              startPosition.value = Offset(
-                startX * cellSize,
-                startY * cellSize,
+              startX.value = (details.localPosition.dx ~/ cellSize).clamp(
+                0,
+                columnCount,
               );
-              currentPosition.value = startPosition.value;
+              startY.value = (details.localPosition.dy ~/ cellSize).clamp(
+                0,
+                rowCount,
+              );
+
+              currentX.value = startX.value;
+              currentY.value = startY.value;
             },
             onPanUpdate: (details) {
               if (!isDragging.value) return;
-              final cellSize = calculatedHeight / height;
-              final currentX = (details.localPosition.dx / cellSize).floor();
-              final currentY = (details.localPosition.dy / cellSize).floor();
-              currentPosition.value = Offset(
-                currentX * cellSize,
-                currentY * cellSize,
+              currentX.value = (details.localPosition.dx ~/ cellSize).clamp(
+                0,
+                columnCount,
+              );
+              currentY.value = (details.localPosition.dy ~/ cellSize).clamp(
+                0,
+                rowCount,
               );
             },
             onPanEnd: (_) {
-              if (startPosition.value != null &&
-                  currentPosition.value != null) {
-                updateGridInRange(startPosition.value!, currentPosition.value!);
+              if (startX.value != null &&
+                  startY.value != null &&
+                  currentX.value != null &&
+                  currentY.value != null) {
+                updateGridInRange(
+                  startX.value!,
+                  startY.value!,
+                  currentX.value!,
+                  currentY.value!,
+                );
               }
               isDragging.value = false;
-              startPosition.value = null;
-              currentPosition.value = null;
+              startX.value = null;
+              currentX.value = null;
             },
             child: Stack(
               children: [
                 GridView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: width,
+                    crossAxisCount: columnCount,
                   ),
-                  itemCount: width * height,
+                  itemCount: columnCount * rowCount,
                   itemBuilder: (context, index) {
-                    final x = index % width;
-                    final y = index ~/ width;
+                    final x = index % columnCount;
+                    final y = index ~/ columnCount;
                     final isActive = roomGrid.value[y][x];
                     return Container(
                       decoration: BoxDecoration(
@@ -114,13 +120,18 @@ class RoomGridInput extends HookWidget {
                   },
                 ),
                 if (isDragging.value &&
-                    startPosition.value != null &&
-                    currentPosition.value != null)
+                    startX.value != null &&
+                    startY.value != null &&
+                    currentX.value != null &&
+                    currentY.value != null)
                   Positioned.fill(
                     child: CustomPaint(
-                      painter: SelectionPainter(
-                        start: startPosition.value!,
-                        end: currentPosition.value!,
+                      painter: _SelectionPainter(
+                        startX: startX.value!,
+                        startY: startY.value!,
+                        endX: currentX.value!,
+                        endY: currentY.value!,
+                        cellSize: cellSize.toDouble(),
                       ),
                     ),
                   ),
@@ -130,5 +141,43 @@ class RoomGridInput extends HookWidget {
         ),
       ],
     );
+  }
+}
+
+class _SelectionPainter extends CustomPainter {
+  _SelectionPainter({
+    required this.startX,
+    required this.startY,
+    required this.endX,
+    required this.endY,
+    required this.cellSize,
+  });
+
+  final int startX;
+  final int startY;
+  final int endX;
+  final int endY;
+  final double cellSize;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint =
+        Paint()
+          ..color = Colors.blue.withAlpha(100)
+          ..style = PaintingStyle.fill;
+
+    final rect = Rect.fromPoints(
+      Offset(startX * cellSize, startY * cellSize),
+      Offset((endX + 1) * cellSize, (endY + 1) * cellSize),
+    );
+    canvas.drawRect(rect, paint);
+  }
+
+  @override
+  bool shouldRepaint(_SelectionPainter oldDelegate) {
+    return startX != oldDelegate.startX ||
+        startY != oldDelegate.startY ||
+        endX != oldDelegate.endX ||
+        endY != oldDelegate.endY;
   }
 }

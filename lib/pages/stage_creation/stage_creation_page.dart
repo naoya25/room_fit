@@ -21,30 +21,24 @@ enum GridMode {
   }
 }
 
-/// ステージ作成ページ
 class StageCreationPage extends HookConsumerWidget {
   const StageCreationPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // --- TextEditingController ---
     final stageNameController = useTextEditingController();
     final widthController = useTextEditingController(text: '20');
     final heightController = useTextEditingController(text: '18');
 
-    // --- 部屋の2次元グリッド(最大サイズ)を管理 ---
     final roomGrid = useState<List<List<bool>>>(
       List.generate(maxGridRowNum, (_) => List.filled(maxGridColNum, false)),
     );
 
-    // --- エラー表示用のState ---
     final stageNameError = useState<String?>(null);
     final widthError = useState<String?>(null);
     final heightError = useState<String?>(null);
 
-    // --- 入力値チェック ---
     bool validateInputs() {
-      // ステージ名
       if (stageNameController.text.isEmpty) {
         stageNameError.value = 'ステージ名を入力してください';
         return false;
@@ -52,7 +46,6 @@ class StageCreationPage extends HookConsumerWidget {
         stageNameError.value = null;
       }
 
-      // 幅
       if (widthController.text.isEmpty) {
         widthError.value = '横幅を入力してください';
         return false;
@@ -72,7 +65,6 @@ class StageCreationPage extends HookConsumerWidget {
         }
       }
 
-      // 高さ
       if (heightController.text.isEmpty) {
         heightError.value = '高さを入力してください';
         return false;
@@ -137,7 +129,6 @@ class StageCreationPage extends HookConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- ステージ名入力 ---
               TextField(
                 controller: stageNameController,
                 decoration: InputDecoration(
@@ -147,8 +138,6 @@ class StageCreationPage extends HookConsumerWidget {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // --- 幅・高さ入力 ---
               GridSizeInput(
                 widthController: widthController,
                 heightController: heightController,
@@ -156,8 +145,6 @@ class StageCreationPage extends HookConsumerWidget {
                 heightError: heightError.value,
               ),
               const SizedBox(height: 24),
-
-              // --- グリッド編集UI ---
               if (widthController.text.isNotEmpty &&
                   heightController.text.isNotEmpty)
                 LayoutBuilder(
@@ -167,20 +154,18 @@ class StageCreationPage extends HookConsumerWidget {
                     if (w == 0 || h == 0) return const SizedBox.shrink();
 
                     final screenWidth = constraints.maxWidth;
-                    final cellSize = screenWidth / w;
-                    final calculatedHeight = cellSize * h;
+                    final cellSize = screenWidth ~/ w;
 
                     return RoomGridInput(
-                      width: w,
-                      height: h,
-                      calculatedHeight: calculatedHeight,
+                      columnCount: w,
+                      rowCount: h,
+                      cellSize: cellSize,
                       roomGrid: roomGrid,
                     );
                   },
                 ),
 
               const SizedBox(height: 24),
-              // --- 作成ボタン ---
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
