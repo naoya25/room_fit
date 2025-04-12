@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:room_fit/core/utils/uuid_to_color.dart';
 import 'package:room_fit/models/furniture_model.dart';
 import 'grid_view.dart';
 
@@ -47,7 +48,7 @@ class CustomGridDisplay extends StatelessWidget {
                   colNum: furniture.furniture.width,
                   rowNum: furniture.furniture.height,
                   cellSize: cellSize.toDouble(),
-                  cellColor: Colors.blue.withAlpha(77),
+                  cellColor: generateColorFromUUID(furniture.furniture.id),
                   onCellTap: (x, y) {
                     onCellTap?.call(x + furniture.x, y + furniture.y);
                   },
