@@ -3,6 +3,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:room_fit/core/constants/grid_size.dart';
+import 'package:room_fit/pages/stage_creation/components/grid_input.dart';
+import 'package:room_fit/pages/stage_creation/components/grid_size_input.dart';
 import 'package:room_fit/providers/stage_provider.dart';
 
 enum GridMode {
@@ -92,18 +94,15 @@ class StageCreationPage extends HookConsumerWidget {
       return true;
     }
 
-    // --- 作成ボタン押下時の処理 ---
     Future<void> onCreatePressed() async {
       if (!validateInputs()) return;
 
       final w = int.parse(widthController.text);
       final h = int.parse(heightController.text);
 
-      // 実際に使用する範囲だけ切り抜く
       final selectedGrid =
           roomGrid.value.sublist(0, h).map((row) => row.sublist(0, w)).toList();
 
-      // Provider側のcreateStageを呼び出し
       await ref
           .read(stageListProvider.notifier)
           .createStage(
@@ -118,7 +117,6 @@ class StageCreationPage extends HookConsumerWidget {
       }
     }
 
-    // 入力が更新されるたびにバリデーションを実行
     useEffect(() {
       stageNameController.addListener(validateInputs);
       widthController.addListener(validateInputs);
@@ -133,7 +131,7 @@ class StageCreationPage extends HookConsumerWidget {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        appBar: AppBar(title: const Text('ステージ作成'), centerTitle: true),
+        appBar: AppBar(title: const Text('お部屋の登録'), centerTitle: true),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -151,7 +149,7 @@ class StageCreationPage extends HookConsumerWidget {
               const SizedBox(height: 16),
 
               // --- 幅・高さ入力 ---
-              _GridSizeInput(
+              GridSizeInput(
                 widthController: widthController,
                 heightController: heightController,
                 widthError: widthError.value,
@@ -172,7 +170,7 @@ class StageCreationPage extends HookConsumerWidget {
                     final cellSize = screenWidth / w;
                     final calculatedHeight = cellSize * h;
 
-                    return _RoomGridInput(
+                    return RoomGridInput(
                       width: w,
                       height: h,
                       calculatedHeight: calculatedHeight,
@@ -194,188 +192,6 @@ class StageCreationPage extends HookConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// 幅・高さ入力用Widget
-class _GridSizeInput extends StatelessWidget {
-  const _GridSizeInput({
-    required this.widthController,
-    required this.heightController,
-    required this.widthError,
-    required this.heightError,
-  });
-
-  final TextEditingController widthController;
-  final TextEditingController heightController;
-  final String? widthError;
-  final String? heightError;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        // 横幅
-        Expanded(
-          child: TextField(
-            controller: widthController,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              labelText: '横幅',
-              border: const OutlineInputBorder(),
-              errorText: widthError,
-            ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        // 高さ
-        Expanded(
-          child: TextField(
-            controller: heightController,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              labelText: '高さ',
-              border: const OutlineInputBorder(),
-              errorText: heightError,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// 部屋のグリッド編集UI
-class _RoomGridInput extends HookWidget {
-  const _RoomGridInput({
-    required this.width,
-    required this.height,
-    required this.calculatedHeight,
-    required this.roomGrid,
-  });
-
-  final int width;
-  final int height;
-  final double calculatedHeight;
-  final ValueNotifier<List<List<bool>>> roomGrid;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDragging = useState(false);
-    final mode = useState(GridMode.add);
-
-    void updateGrid(int x, int y) {
-      if (x < 0 || x >= width || y < 0 || y >= height) return;
-
-      final newValue = (mode.value == GridMode.add);
-      if (roomGrid.value[y][x] != newValue) {
-        final newGrid =
-            roomGrid.value.map((row) => List<bool>.from(row)).toList();
-        newGrid[y][x] = newValue;
-        roomGrid.value = newGrid;
-      }
-    }
-
-    return Column(
-      children: [
-        _ModeToggleButton(currentMode: mode),
-        const SizedBox(height: 16),
-        Text('部屋の配置をタップまたはドラッグして設定してください'),
-        Text('横幅: $width  高さ: $height'),
-        const SizedBox(height: 16),
-        Container(
-          width: double.infinity,
-          height: calculatedHeight,
-          decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
-          child: GestureDetector(
-            onPanStart: (details) {
-              isDragging.value = true;
-              final cellSize = calculatedHeight / height;
-              final x = (details.localPosition.dx / cellSize).floor();
-              final y = (details.localPosition.dy / cellSize).floor();
-              updateGrid(x, y);
-            },
-            onPanUpdate: (details) {
-              if (!isDragging.value) return;
-              final cellSize = calculatedHeight / height;
-              final x = (details.localPosition.dx / cellSize).floor();
-              final y = (details.localPosition.dy / cellSize).floor();
-              updateGrid(x, y);
-            },
-            onPanEnd: (_) {
-              isDragging.value = false;
-            },
-            child: GridView.builder(
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: width,
-              ),
-              itemCount: width * height,
-              itemBuilder: (context, index) {
-                final x = index % width;
-                final y = index ~/ width;
-                final isActive = roomGrid.value[y][x];
-                return GestureDetector(
-                  onTap: () => updateGrid(x, y),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      color: isActive ? Colors.blue.shade200 : Colors.white,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// 追加／削除の切り替えボタン
-class _ModeToggleButton extends StatelessWidget {
-  const _ModeToggleButton({required this.currentMode});
-
-  final ValueNotifier<GridMode> currentMode;
-
-  Widget _buildButton({
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.blue : Colors.grey.shade200,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.black,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        for (final mode in GridMode.values)
-          _buildButton(
-            label: mode.label,
-            isSelected: currentMode.value == mode,
-            onTap: () => currentMode.value = mode,
-          ),
-      ],
     );
   }
 }

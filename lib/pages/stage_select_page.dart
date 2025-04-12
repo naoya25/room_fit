@@ -11,7 +11,16 @@ class StageSelectPage extends HookConsumerWidget {
     final stageListAsync = ref.watch(stageListProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text("ステージを選ぶ")),
+      appBar: AppBar(
+        title: Text("お部屋一覧"),
+        leading: IconButton(
+          icon: Icon(
+            Icons.home,
+            color: Theme.of(context).colorScheme.inversePrimary,
+          ),
+          onPressed: () => context.go('/'),
+        ),
+      ),
       body: stageListAsync.when(
         data:
             (stages) => GridView.builder(
