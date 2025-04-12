@@ -22,29 +22,25 @@ class CustomGridView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: colNum,
-      ),
-      physics: NeverScrollableScrollPhysics(),
-      itemCount: rowNum * colNum,
-      itemBuilder: (context, index) {
-        final x = index % colNum;
-        final y = index ~/ colNum;
-        final cellValue = grid[y][x];
-
-        return SizedBox(
-          width: cellSize.toDouble(),
-          height: cellSize.toDouble(),
-          child: GridCell(
-            size: cellSize,
-            isActive: cellValue,
-            border: getBorder(x, y, grid, colNum, rowNum),
-            color: cellColor,
-            onTap: () => onCellTap?.call(x, y),
-          ),
+    return Column(
+      children: List.generate(rowNum, (y) {
+        return Row(
+          children: List.generate(colNum, (x) {
+            final cellValue = grid[y][x];
+            return SizedBox(
+              width: cellSize.toDouble(),
+              height: cellSize.toDouble(),
+              child: GridCell(
+                size: cellSize,
+                isActive: cellValue,
+                border: getBorder(x, y, grid, colNum, rowNum),
+                color: cellColor,
+                onTap: () => onCellTap?.call(x, y),
+              ),
+            );
+          }),
         );
-      },
+      }),
     );
   }
 }

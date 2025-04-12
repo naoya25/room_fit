@@ -92,7 +92,8 @@ class StagePlayPage extends HookConsumerWidget {
       appBar: AppBar(title: const Text('ステージプレイ')),
       body: stageAsync.when(
         data: (stage) {
-          final cellSize = MediaQuery.of(context).size.width ~/ stage.width;
+          final cellSize =
+              MediaQuery.of(context).size.width * 0.9 ~/ stage.width;
           return Column(
             children: [
               CustomGridDisplay(
