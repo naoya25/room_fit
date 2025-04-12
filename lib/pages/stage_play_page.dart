@@ -16,8 +16,6 @@ class StagePlayPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final stageAsync = ref.watch(stageDetailProvider(stageId));
     final furnitureQueue = ref.watch(continuousFurnitureQueueProvider);
-    final currentFurniture =
-        furnitureQueue?.isNotEmpty == true ? furnitureQueue!.first : null;
     final placedFurnitures = useState<List<PlacedFurniture>>([]);
 
     bool validPlacement(
@@ -26,39 +24,57 @@ class StagePlayPage extends HookConsumerWidget {
       FurnitureModel currentFurniture,
       List<PlacedFurniture> placedFurnitures,
     ) {
+      if (stageAsync.value == null) return false;
       if (x < 0 ||
           y < 0 ||
-          x + currentFurniture.width > stageAsync.value!.width ||
-          y + currentFurniture.height > stageAsync.value!.height) {
+          x > stageAsync.value!.width ||
+          y > stageAsync.value!.height) {
         return false;
       }
 
+      // ステージの範囲チェック
       for (var i = y; i < y + currentFurniture.height; i++) {
         for (var j = x; j < x + currentFurniture.width; j++) {
-          if (!stageAsync.value!.roomGrid[i][j]) return false;
+          if (!stageAsync.value!.roomGrid[i][j] &&
+              currentFurniture.grid[i - y][j - x]) {
+            return false;
+          }
         }
       }
-
+      // 既存の家具との重なりチェック
       for (var placedFurniture in placedFurnitures) {
-        for (var i = y; i < y + currentFurniture.height; i++) {
-          for (var j = x; j < x + currentFurniture.width; j++) {
-            if (i >= placedFurniture.y &&
-                i < placedFurniture.y + placedFurniture.furniture.height &&
-                j >= placedFurniture.x &&
-                j < placedFurniture.x + placedFurniture.furniture.width) {
-              return false;
+        final placedX = placedFurniture.x;
+        final placedY = placedFurniture.y;
+        final placedGrid = placedFurniture.furniture.grid;
+        // 配置しようとしている家具の各セルをチェック
+        for (var i = 0; i < currentFurniture.height; i++) {
+          for (var j = 0; j < currentFurniture.width; j++) {
+            if (!currentFurniture.grid[i][j]) continue;
+
+            final checkX = x + j;
+            final checkY = y + i;
+            // 既存の家具の範囲内かチェック
+            if (checkX >= placedX &&
+                checkX < placedX + placedFurniture.furniture.width &&
+                checkY >= placedY &&
+                checkY < placedY + placedFurniture.furniture.height) {
+              // 既存の家具のその位置にセルがあるかチェック
+              final relativeX = checkX - placedX;
+              final relativeY = checkY - placedY;
+              if (placedGrid[relativeY][relativeX]) {
+                return false;
+              }
             }
           }
         }
       }
-
       return true;
     }
 
     void placeFurnitureAt(int x, int y) {
-      if (currentFurniture == null) return;
+      if (furnitureQueue?.isEmpty == true) return;
 
-      final furniture = currentFurniture;
+      final furniture = furnitureQueue!.first;
 
       if (!validPlacement(x, y, furniture, placedFurnitures.value)) {
         showErrorSnackBar(context, '家具が配置できません');
@@ -87,12 +103,12 @@ class StagePlayPage extends HookConsumerWidget {
                 onCellTap: placeFurnitureAt,
                 placedFurnitures: placedFurnitures.value,
               ),
-              if (currentFurniture != null) ...[
-                Text("次の家具: ${currentFurniture.name}"),
+              if (furnitureQueue?.isNotEmpty == true) ...[
+                Text("次の家具: ${furnitureQueue!.first.name}"),
                 CustomGridDisplay(
-                  grid: currentFurniture.grid,
-                  colNum: currentFurniture.width,
-                  rowNum: currentFurniture.height,
+                  grid: furnitureQueue.first.grid,
+                  colNum: furnitureQueue.first.width,
+                  rowNum: furnitureQueue.first.height,
                   cellSize: cellSize,
                 ),
               ],

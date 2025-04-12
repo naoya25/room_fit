@@ -20,61 +20,8 @@ class CustomGridDisplay extends StatelessWidget {
   final Function(int x, int y)? onCellTap;
   final List<PlacedFurniture>? placedFurnitures;
 
-  bool _validPlacement(PlacedFurniture furniture) {
-    // グリッドの範囲チェック
-    if (furniture.x < 0 ||
-        furniture.y < 0 ||
-        furniture.x + furniture.furniture.width > colNum ||
-        furniture.y + furniture.furniture.height > rowNum) {
-      return false;
-    }
-
-    // 配置可能なセルかチェック
-    for (
-      var y = furniture.y;
-      y < furniture.y + furniture.furniture.height;
-      y++
-    ) {
-      for (
-        var x = furniture.x;
-        x < furniture.x + furniture.furniture.width;
-        x++
-      ) {
-        if (!grid[y][x]) {
-          return false;
-        }
-      }
-    }
-
-    // 他の家具との重なりチェック
-    if (placedFurnitures != null) {
-      for (var otherFurniture in placedFurnitures!) {
-        if (furniture == otherFurniture) continue;
-
-        if (furniture.x < otherFurniture.x + otherFurniture.furniture.width &&
-            furniture.x + furniture.furniture.width > otherFurniture.x &&
-            furniture.y < otherFurniture.y + otherFurniture.furniture.height &&
-            furniture.y + furniture.furniture.height > otherFurniture.y) {
-          return false;
-        }
-      }
-    }
-
-    return true;
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (placedFurnitures != null) {
-      for (var furniture in placedFurnitures!) {
-        if (!_validPlacement(furniture)) {
-          return Center(
-            child: Text('家具が配置できません', style: TextStyle(color: Colors.red)),
-          );
-        }
-      }
-    }
-
     return Padding(
       padding: EdgeInsets.all(8),
       child: SizedBox(
@@ -101,6 +48,9 @@ class CustomGridDisplay extends StatelessWidget {
                   rowNum: furniture.furniture.height,
                   cellSize: cellSize.toDouble(),
                   cellColor: Colors.blue.withAlpha(77),
+                  onCellTap: (x, y) {
+                    onCellTap?.call(x + furniture.x, y + furniture.y);
+                  },
                 ),
               );
             }),

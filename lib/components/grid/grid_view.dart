@@ -19,8 +19,8 @@ class CustomGridView extends StatelessWidget {
   final Function(int x, int y)? onCellTap;
   final Color? cellColor;
 
-  Border? _getBorder(int x, int y) {
-    if (!grid[y][x]) return null;
+  Border _getBorder(int x, int y) {
+    if (!grid[y][x]) return Border.all(color: Colors.transparent, width: 1);
 
     final directions = [
       [0, -1],
@@ -48,28 +48,25 @@ class CustomGridView extends StatelessWidget {
       if (isBoundary) {
         if (dir[0] == 0 && dir[1] == -1) {
           top = BorderSide(color: Colors.black, width: 1);
-        }
-        if (dir[0] == 0 && dir[1] == 1) {
+        } else if (dir[0] == 0 && dir[1] == 1) {
           bottom = BorderSide(color: Colors.black, width: 1);
-        }
-        if (dir[0] == -1 && dir[1] == 0) {
+        } else if (dir[0] == -1 && dir[1] == 0) {
           left = BorderSide(color: Colors.black, width: 1);
-        }
-        if (dir[0] == 1 && dir[1] == 0) {
+        } else if (dir[0] == 1 && dir[1] == 0) {
           right = BorderSide(color: Colors.black, width: 1);
         }
       }
     }
 
     if (top == null && bottom == null && left == null && right == null) {
-      return null;
+      return Border.all(color: Colors.transparent, width: 1);
     }
 
     return Border(
-      top: top ?? BorderSide.none,
-      bottom: bottom ?? BorderSide.none,
-      left: left ?? BorderSide.none,
-      right: right ?? BorderSide.none,
+      top: top ?? BorderSide(color: Colors.transparent, width: 1),
+      bottom: bottom ?? BorderSide(color: Colors.transparent, width: 1),
+      left: left ?? BorderSide(color: Colors.transparent, width: 1),
+      right: right ?? BorderSide(color: Colors.transparent, width: 1),
     );
   }
 
@@ -87,7 +84,7 @@ class CustomGridView extends StatelessWidget {
         final cellValue = grid[y][x];
 
         return GridCell(
-          size: cellSize,
+          size: cellSize - 2,
           isActive: cellValue,
           border: _getBorder(x, y),
           color: cellColor,
