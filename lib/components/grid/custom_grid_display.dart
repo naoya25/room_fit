@@ -34,7 +34,7 @@ class CustomGridDisplay extends StatelessWidget {
               grid: grid,
               colNum: colNum,
               rowNum: rowNum,
-              cellSize: cellSize.toDouble(),
+              cellSize: cellSize,
               onCellTap: onCellTap,
             ),
             ...?placedFurnitures?.map((furniture) {
@@ -47,7 +47,7 @@ class CustomGridDisplay extends StatelessWidget {
                   grid: furniture.furniture.grid,
                   colNum: furniture.furniture.width,
                   rowNum: furniture.furniture.height,
-                  cellSize: cellSize.toDouble(),
+                  cellSize: cellSize,
                   cellColor: generateColorFromUUID(furniture.furniture.id),
                   onCellTap: (x, y) {
                     onCellTap?.call(x + furniture.x, y + furniture.y);

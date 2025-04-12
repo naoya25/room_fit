@@ -10,7 +10,7 @@ class GridCell extends StatelessWidget {
     this.onTap,
   });
 
-  final double size;
+  final int size;
   final bool isActive;
   final Border? border;
   final Color? color;
@@ -21,8 +21,8 @@ class GridCell extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: size,
-        height: size,
+        width: size.toDouble(),
+        height: size.toDouble(),
         decoration: BoxDecoration(
           color: isActive ? (color ?? Colors.white) : Colors.transparent,
           border: border,
