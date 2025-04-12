@@ -12,6 +12,7 @@ class CustomGridDisplay extends StatelessWidget {
     this.cellSize = 10,
     this.onCellTap,
     this.placedFurnitures = const [],
+    this.child,
   });
 
   final List<List<bool>> grid;
@@ -20,6 +21,7 @@ class CustomGridDisplay extends StatelessWidget {
   final int cellSize;
   final Function(int x, int y)? onCellTap;
   final List<PlacedFurniture>? placedFurnitures;
+  final Widget? child;
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +57,7 @@ class CustomGridDisplay extends StatelessWidget {
                 ),
               );
             }),
+            if (child != null) child!,
           ],
         ),
       ),

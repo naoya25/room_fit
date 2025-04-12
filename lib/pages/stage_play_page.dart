@@ -19,30 +19,6 @@ class StagePlayPage extends HookConsumerWidget {
     final furnitureQueue = ref.watch(continuousFurnitureQueueProvider);
     final placedFurnitures = useState<List<PlacedFurniture>>([]);
 
-    void placeFurnitureAt(int x, int y) {
-      if (furnitureQueue?.isEmpty == true) return;
-
-      final furniture = furnitureQueue!.first;
-
-      if (stageAsync.value == null ||
-          !validPlacement(
-            x,
-            y,
-            furniture,
-            placedFurnitures.value,
-            stageAsync.value!,
-          )) {
-        showErrorSnackBar(context, '家具が配置できません');
-        return;
-      }
-
-      placedFurnitures.value = [
-        ...placedFurnitures.value,
-        PlacedFurniture(furniture: furniture, x: x, y: y),
-      ];
-      ref.read(continuousFurnitureQueueProvider.notifier).removeFirst();
-    }
-
     return Scaffold(
       appBar: AppBar(title: const Text('ステージプレイ')),
       body: stageAsync.when(
@@ -56,16 +32,80 @@ class StagePlayPage extends HookConsumerWidget {
                 colNum: stage.width,
                 rowNum: stage.height,
                 cellSize: cellSize,
-                onCellTap: placeFurnitureAt,
                 placedFurnitures: placedFurnitures.value,
+                child: Builder(
+                  builder:
+                      (gridContext) => DragTarget<FurnitureModel>(
+                        onAcceptWithDetails: (details) {
+                          final renderBox =
+                              gridContext.findRenderObject() as RenderBox;
+                          final localPosition = renderBox.globalToLocal(
+                            details.offset,
+                          );
+
+                          final adjustedX = localPosition.dx - 8;
+                          final adjustedY = localPosition.dy - 8;
+
+                          final x = (adjustedX / cellSize).round();
+                          final y = (adjustedY / cellSize).round();
+
+                          if (!validPlacement(
+                            x,
+                            y,
+                            details.data,
+                            placedFurnitures.value,
+                            stage,
+                          )) {
+                            showErrorSnackBar(context, '家具が配置できません');
+                            return;
+                          }
+
+                          placedFurnitures.value = [
+                            ...placedFurnitures.value,
+                            PlacedFurniture(
+                              furniture: details.data,
+                              x: x,
+                              y: y,
+                            ),
+                          ];
+                          ref
+                              .read(continuousFurnitureQueueProvider.notifier)
+                              .removeFirst();
+                        },
+                        builder: (context, candidateData, rejectedData) {
+                          return SizedBox(
+                            width: stage.width * cellSize.toDouble(),
+                            height: stage.height * cellSize.toDouble(),
+                          );
+                        },
+                      ),
+                ),
               ),
               if (furnitureQueue?.isNotEmpty == true) ...[
                 Text("次の家具: ${furnitureQueue!.first.name}"),
-                CustomGridDisplay(
-                  grid: furnitureQueue.first.grid,
-                  colNum: furnitureQueue.first.width,
-                  rowNum: furnitureQueue.first.height,
-                  cellSize: cellSize,
+                Draggable<FurnitureModel>(
+                  data: furnitureQueue.first,
+                  feedback: CustomGridDisplay(
+                    grid: furnitureQueue.first.grid,
+                    colNum: furnitureQueue.first.width,
+                    rowNum: furnitureQueue.first.height,
+                    cellSize: cellSize,
+                  ),
+                  childWhenDragging: Opacity(
+                    opacity: 0.5,
+                    child: CustomGridDisplay(
+                      grid: furnitureQueue.first.grid,
+                      colNum: furnitureQueue.first.width,
+                      rowNum: furnitureQueue.first.height,
+                      cellSize: cellSize,
+                    ),
+                  ),
+                  child: CustomGridDisplay(
+                    grid: furnitureQueue.first.grid,
+                    colNum: furnitureQueue.first.width,
+                    rowNum: furnitureQueue.first.height,
+                    cellSize: cellSize,
+                  ),
                 ),
               ],
             ],
