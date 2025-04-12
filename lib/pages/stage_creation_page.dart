@@ -265,39 +265,25 @@ class _RoomGridInput extends HookWidget {
     final isDragging = useState(false);
     final mode = useState(GridMode.add);
 
-    // ローカルで編集用のGrid（画面表示用）を管理
-    final localGrid = useState(
-      roomGrid.value.map((row) => List<bool>.from(row)).toList(),
-    );
-
-    // roomGrid本体が変わったら表示用を同期
-    useEffect(() {
-      localGrid.value =
-          roomGrid.value.map((row) => List<bool>.from(row)).toList();
-      return null;
-    }, [roomGrid.value]);
-
-    // 指定座標をタップ／ドラッグされた際に状態を更新
     void updateGrid(int x, int y) {
       if (x < 0 || x >= width || y < 0 || y >= height) return;
 
       final newValue = (mode.value == GridMode.add);
-      if (localGrid.value[y][x] != newValue) {
-        localGrid.value[y][x] = newValue;
-        roomGrid.value[y][x] = newValue; // 本体も更新
+      if (roomGrid.value[y][x] != newValue) {
+        final newGrid =
+            roomGrid.value.map((row) => List<bool>.from(row)).toList();
+        newGrid[y][x] = newValue;
+        roomGrid.value = newGrid;
       }
     }
 
     return Column(
       children: [
-        // --- 追加／削除の切り替えボタン ---
         _ModeToggleButton(currentMode: mode),
         const SizedBox(height: 16),
         Text('部屋の配置をタップまたはドラッグして設定してください'),
         Text('横幅: $width  高さ: $height'),
         const SizedBox(height: 16),
-
-        // --- グリッド本体 ---
         Container(
           width: double.infinity,
           height: calculatedHeight,
@@ -329,11 +315,14 @@ class _RoomGridInput extends HookWidget {
               itemBuilder: (context, index) {
                 final x = index % width;
                 final y = index ~/ width;
-                final isActive = localGrid.value[y][x];
-                return Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    color: isActive ? Colors.blue.shade200 : Colors.white,
+                final isActive = roomGrid.value[y][x];
+                return GestureDetector(
+                  onTap: () => updateGrid(x, y),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      color: isActive ? Colors.blue.shade200 : Colors.white,
+                    ),
                   ),
                 );
               },
