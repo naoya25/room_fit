@@ -19,8 +19,8 @@ class CustomGridView extends StatelessWidget {
   final Function(int x, int y)? onCellTap;
   final Color? cellColor;
 
-  Border _getBorder(int x, int y) {
-    if (!grid[y][x]) return Border.all(color: Colors.transparent, width: 1);
+  Border? _getBorder(int x, int y) {
+    if (!grid[y][x]) return null;
 
     final directions = [
       [0, -1],
@@ -59,14 +59,14 @@ class CustomGridView extends StatelessWidget {
     }
 
     if (top == null && bottom == null && left == null && right == null) {
-      return Border.all(color: Colors.transparent, width: 1);
+      return null;
     }
 
     return Border(
-      top: top ?? BorderSide(color: Colors.transparent, width: 1),
-      bottom: bottom ?? BorderSide(color: Colors.transparent, width: 1),
-      left: left ?? BorderSide(color: Colors.transparent, width: 1),
-      right: right ?? BorderSide(color: Colors.transparent, width: 1),
+      top: top ?? BorderSide.none,
+      bottom: bottom ?? BorderSide.none,
+      left: left ?? BorderSide.none,
+      right: right ?? BorderSide.none,
     );
   }
 
@@ -84,7 +84,7 @@ class CustomGridView extends StatelessWidget {
         final cellValue = grid[y][x];
 
         return GridCell(
-          size: cellSize - 2,
+          size: cellSize,
           isActive: cellValue,
           border: _getBorder(x, y),
           color: cellColor,

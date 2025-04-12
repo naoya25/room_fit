@@ -26,6 +26,10 @@ class HomePage extends HookConsumerWidget {
               onPressed: () => context.push('/select'),
               child: const Text('ステージを選ぶ'),
             ),
+            TextButton(
+              onPressed: () => context.push('/stage_creation'),
+              child: const Text('ステージを作成する'),
+            ),
           ],
         ),
       ),
