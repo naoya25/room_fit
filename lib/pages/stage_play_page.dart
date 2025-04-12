@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:room_fit/components/error.dart';
+import 'package:room_fit/core/utils/valid_grid_placement.dart';
 import '../components/grid/custom_grid_display.dart';
 import '../models/furniture_model.dart';
 import '../providers/furniture/continuous_furniture_provider.dart';
@@ -18,65 +19,19 @@ class StagePlayPage extends HookConsumerWidget {
     final furnitureQueue = ref.watch(continuousFurnitureQueueProvider);
     final placedFurnitures = useState<List<PlacedFurniture>>([]);
 
-    bool validPlacement(
-      int x,
-      int y,
-      FurnitureModel currentFurniture,
-      List<PlacedFurniture> placedFurnitures,
-    ) {
-      if (stageAsync.value == null) return false;
-      if (x < 0 ||
-          y < 0 ||
-          x > stageAsync.value!.width ||
-          y > stageAsync.value!.height) {
-        return false;
-      }
-
-      // ステージの範囲チェック
-      for (var i = y; i < y + currentFurniture.height; i++) {
-        for (var j = x; j < x + currentFurniture.width; j++) {
-          if (!stageAsync.value!.roomGrid[i][j] &&
-              currentFurniture.grid[i - y][j - x]) {
-            return false;
-          }
-        }
-      }
-      // 既存の家具との重なりチェック
-      for (var placedFurniture in placedFurnitures) {
-        final placedX = placedFurniture.x;
-        final placedY = placedFurniture.y;
-        final placedGrid = placedFurniture.furniture.grid;
-        // 配置しようとしている家具の各セルをチェック
-        for (var i = 0; i < currentFurniture.height; i++) {
-          for (var j = 0; j < currentFurniture.width; j++) {
-            if (!currentFurniture.grid[i][j]) continue;
-
-            final checkX = x + j;
-            final checkY = y + i;
-            // 既存の家具の範囲内かチェック
-            if (checkX >= placedX &&
-                checkX < placedX + placedFurniture.furniture.width &&
-                checkY >= placedY &&
-                checkY < placedY + placedFurniture.furniture.height) {
-              // 既存の家具のその位置にセルがあるかチェック
-              final relativeX = checkX - placedX;
-              final relativeY = checkY - placedY;
-              if (placedGrid[relativeY][relativeX]) {
-                return false;
-              }
-            }
-          }
-        }
-      }
-      return true;
-    }
-
     void placeFurnitureAt(int x, int y) {
       if (furnitureQueue?.isEmpty == true) return;
 
       final furniture = furnitureQueue!.first;
 
-      if (!validPlacement(x, y, furniture, placedFurnitures.value)) {
+      if (stageAsync.value == null ||
+          !validPlacement(
+            x,
+            y,
+            furniture,
+            placedFurnitures.value,
+            stageAsync.value!,
+          )) {
         showErrorSnackBar(context, '家具が配置できません');
         return;
       }
