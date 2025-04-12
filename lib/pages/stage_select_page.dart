@@ -1,70 +1,60 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:room_fit/models/stage_model.dart';
 import '../providers/stage_provider.dart';
+import '../components/action_card.dart';
 
 class StageSelectPage extends HookConsumerWidget {
   const StageSelectPage({super.key});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final stageListAsync = ref.watch(stageListProvider);
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("お部屋一覧"),
+        title: const Text("お部屋一覧"),
         leading: IconButton(
-          icon: Icon(
-            Icons.home,
-            color: Theme.of(context).colorScheme.inversePrimary,
-          ),
+          icon: Icon(Icons.home, color: theme.colorScheme.inversePrimary),
           onPressed: () => context.go('/'),
         ),
       ),
       body: stageListAsync.when(
         data:
             (stages) => GridView.builder(
-              padding: EdgeInsets.all(16),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 1.2,
+              padding: const EdgeInsets.all(16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 1,
+                mainAxisSpacing: 16,
+                childAspectRatio: 3.5,
               ),
               itemCount: stages.length,
               itemBuilder: (_, index) {
                 final stage = stages[index];
-                return GestureDetector(
-                  onTap: () {
-                    context.push('/play/${stage.id}');
-                  },
-                  child: _StageCard(stage: stage),
+                return ActionCard(
+                  title: stage.name,
+                  icon: Icons.home_work_outlined,
+                  description: '${stage.width} × ${stage.height}',
+                  onTap: () => context.push('/play/${stage.id}'),
                 );
               },
             ),
-        loading: () => Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text("エラーが発生しました")),
-      ),
-    );
-  }
-}
-
-class _StageCard extends StatelessWidget {
-  const _StageCard({required this.stage});
-
-  final StageModel stage;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Center(
-        child: Column(
-          children: [
-            Text(stage.name, style: TextStyle(fontSize: 18)),
-            Text(stage.height.toString(), style: TextStyle(fontSize: 18)),
-            Text(stage.width.toString(), style: TextStyle(fontSize: 18)),
-          ],
-        ),
+        loading:
+            () => Center(
+              child: CircularProgressIndicator(
+                color: theme.colorScheme.primary,
+              ),
+            ),
+        error:
+            (e, _) => Center(
+              child: Text(
+                "エラーが発生しました",
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ),
       ),
     );
   }
